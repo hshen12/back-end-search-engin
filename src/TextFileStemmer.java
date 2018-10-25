@@ -84,15 +84,4 @@ public class TextFileStemmer {
 		
 		return result;	
 	}
-	
-	/*
-	 * TODO 
-	 * Efficiency...
-	 * 
-	 * Loop through the entire file of words, add to a list
-	 * Loop through the entire list and add to a word index
-	 * Loop through and add from your word index to your indexmap
-	 * 
-	 * Actually create a version of this method in your build that immediately adds
-	 */
 }

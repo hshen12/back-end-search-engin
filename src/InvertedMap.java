@@ -25,8 +25,6 @@ public class InvertedMap {
 		this.map = new TreeMap<String, TreeMap<String, TreeSet<Integer>>>();
 	}
 	
-	// TODO More contains() methods and other genreal data-structure like methods
-	
 	/**
 	 * 	return a set view of all word
 	 * @return Set<String>

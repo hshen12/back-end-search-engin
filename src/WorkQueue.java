@@ -60,7 +60,6 @@ public class WorkQueue {
 	 *
 	 * @param r work request (in the form of a {@link Runnable} object)
 	 */
-	// TODO Modify if necessary
 	public void execute(Runnable r) {
 		synchronized (queue) {
 			incrementPending();
@@ -103,7 +102,6 @@ public class WorkQueue {
 	 * Asks the queue to shutdown. Any unprocessed work will not be finished,
 	 * but threads in-progress will not be interrupted.
 	 */
-	// TODO Modify if necessary
 	public void shutdown() {
 		// safe to do unsynchronized due to volatile keyword
 		shutdown = true;
@@ -118,7 +116,6 @@ public class WorkQueue {
 	 *
 	 * @return number of worker threads
 	 */
-	// TODO Modify if necessary
 	public int size() {
 		return workers.length;
 	}
@@ -131,7 +128,6 @@ public class WorkQueue {
 	 */
 	private class PoolWorker extends Thread {
 
-		// TODO Modify if necessary
 		@Override
 		public void run() {
 			Runnable r = null;
