@@ -34,22 +34,15 @@ public class ArgumentMap {
 	 * @param args the command line arguments to parse
 	 */
 	public void parse(String[] args) {
-
 		for(int i = 0; i < args.length; i++) {
 			if(isFlag(args[i])) {
-				
-				if(i < args.length-1) {
-					if(!isValue(args[i+1])) {
-						map.put(args[i], null);
-					} else {
-						map.put(args[i], args[i+1]);
-					}
+				if(i < args.length-1 && isValue(args[i+1])) {
+					map.put(args[i], args[i+1]);
 				} else {
 					map.put(args[i], null);
 				}
 			}
 		}
-		
 	}
 
 	/**
@@ -69,10 +62,7 @@ public class ArgumentMap {
 			return false;
 		}
 		arg = arg.trim();
-		
 		return (arg.length() > 1 && arg.charAt(0) == '-');
-
-
 	}
 
 	/**
@@ -91,12 +81,7 @@ public class ArgumentMap {
 		if(arg == null) {
 			return false;
 		}
-		if(!arg.trim().isEmpty() && !arg.startsWith("-")) {
-			return true;
-		} else {
-			return false;
-		}
-
+		return (!arg.trim().isEmpty() && !arg.startsWith("-"));
 	}
 
 	/**
@@ -105,9 +90,7 @@ public class ArgumentMap {
 	 * @return number of unique flags
 	 */
 	public int numFlags() {
-
 		return map.size();
-
 	}
 
 	/**
@@ -117,11 +100,7 @@ public class ArgumentMap {
 	 * @return {@code true} if the flag exists
 	 */
 	public boolean hasFlag(String flag) {
-		if(map.containsKey(flag)) {
-			return true;
-		}
-		return false;
-
+		return map.containsKey(flag);
 	}
 
 	/**
@@ -131,11 +110,7 @@ public class ArgumentMap {
 	 * @return {@code true} if the flag is mapped to a non-null value
 	 */
 	public boolean hasValue(String flag) {
-		if(map.containsKey(flag) && map.get(flag)!=null) {
-			return true;
-		}
-		return false;
-
+		return map.get(flag) != null;
 	}
 
 	/**
@@ -148,7 +123,6 @@ public class ArgumentMap {
 	 */
 	public String getString(String flag) {
 		return map.get(flag);
-
 	}
 
 	/**
@@ -167,7 +141,6 @@ public class ArgumentMap {
 			return defaultValue;
 		}
 		return value;
-
 	}
 
 	/**
@@ -190,8 +163,6 @@ public class ArgumentMap {
 		} else {
 			return null;
 		}
-		
-
 	}
 
 	/**
@@ -209,7 +180,6 @@ public class ArgumentMap {
 	 *         or the default value if there is no mapping for the flag
 	 */
 	public Path getPath(String flag, Path defaultValue) {
-		
 		if(map.containsKey(flag)) {
 			if(map.get(flag) == null) {
 				return defaultValue;
@@ -219,8 +189,6 @@ public class ArgumentMap {
 		} else {
 			return defaultValue;
 		}
-		
-
 	}
 
 	@Override

@@ -1,7 +1,7 @@
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 /**
  * Driver class 
@@ -17,50 +17,103 @@ public class Driver {
 	 * @param args the command-line arguments to parse
 	 */
 	public static void main(String[] args) {
-		System.out.println(Arrays.deepToString(args));
-		ArgumentMap arg = new ArgumentMap(args);
-
-		//-path
-		String path = arg.getString("-path");
+		ArgumentMap map = new ArgumentMap(args);
+		InvertedIndex index = new InvertedIndex();
+		WorkQueue wq = null;
+		int thread = 1;
+		boolean threadFlag = map.hasFlag("-threads");
 		
-		InvertedMap map = new InvertedMap();
-		Path file = null;
-		InvertedMapBuilder mapBuilder = new InvertedMapBuilder(map);
+		//-path
+		if(map.hasFlag("-path")) {
+			Path file = map.getPath("-path");
 
-		if(path != null) {
-			file = Paths.get(path);
-			
-			if(Files.exists(file)) {
-				try {
-					mapBuilder.buildMap(file);
-				} catch (Exception e) {
-					//TODO throw all exception at driver?
-					System.out.println(e.getClass());
-					e.printStackTrace();
+			if(file != null && Files.exists(file)) {
+				if(!threadFlag) {
+					try {
+						InvertedMapBuilder.buildMap(file, index);
+					} catch (IOException e) {
+						System.err.println("Unbale to read the path or stem the file: " + file.toString() + "\n\tplease check your argument");
+					}
+				} else {
+					thread = Integer.parseInt(map.getString("-threads", "5"));
+					index = new ThreadSafeInvertedIndex();
+					wq = new WorkQueue(thread);
+					try {
+						MultiThreadInvertedMapBuilder.buildMap(file, index, wq);
+					} catch(Exception e) {
+						System.err.println("Unable to read the path " + file.toString() +"\n\tplease check your argument");
+					}
+				}
+			} else {
+				if(file == null) {
+					System.err.println("Missing argument for -path");
+					return;
+				} else {
+					System.err.println("Invalid value for path flag: " + file.toString() + "\n\tplease check your argument");
+					return;
+
 				}
 			}
+		} else {
+			System.err.println("Missing flag for -path");
 		}
-		
-		
-		
-		
 
 		//-index
-		String index = "";
-		if(arg.hasFlag("-index")) {
-			index = arg.getString("-index", "index.json");
-		} else {
-			index = null;
+		if(map.hasFlag("-index")) {
+			Path indexPath = map.getPath("-index", Paths.get("index.json"));
+			try {
+				index.toIndexJSON(indexPath);
+			} catch (IOException e) {
+				System.err.println("Unable to print out to file: "  + indexPath.toString() + "\n\tplease check your argument.");
+			}
+		} 
+
+		//-locations
+		if(map.hasFlag("-locations")) {
+			Path locationsPath = map.getPath("-locations", Paths.get("locations.json"));
+
+			try {
+				index.toLocationsJSON(locationsPath);
+			} catch(IOException e) {
+				System.err.println("Unable to print out to file: " + locationsPath.toString() + "\n\tplease check your argument.");
+			}
 		}
 
-		//initialize writer
-		InvertedIndexWriter indexWriter = new InvertedIndexWriter(map, index);
-		//if output file is required, output the map
-		if(index != null) {
-			indexWriter.writeJson();
+		SearchResult searchResult = new SearchResult();
+		//-search
+		if(map.hasFlag("-search")) {
+			Path queryFile = map.getPath("-search");
+			boolean exact = map.hasFlag("-exact");
+
+			if(Files.exists(queryFile)) {
+				if(!threadFlag) {
+					try {
+						Search.stemQuery(index, queryFile, exact, searchResult);
+					} catch (IOException e) {
+						System.err.println("Unable to search on: " + queryFile.toString() + "\n\tplease check your argument");
+					}
+				} else {
+					searchResult = new ThreadSafeSearchResult();
+					try {
+						MultiThreadSearch.stemQuery(index, queryFile, exact, searchResult, wq);
+					} catch(IOException e) {
+						System.err.println("Unable to search on: "+ queryFile.toString() + "\n\tplease check your argument");
+					}
+					wq.shutdown();
+				}
+			} else {
+				System.err.println("Invalid value for search flag: " + queryFile.toString() + "\n\tplease check your argument");
+			}
 		}
 
-
+		//-results
+		if(map.hasFlag("-results")) {
+			Path resultPath = map.getPath("-results", Paths.get("results.json"));
+			try {
+				searchResult.toSearchResult(resultPath);
+			} catch(IOException e) {
+				System.err.println("Unable to generate the search result file: " + resultPath.toString() + "\n\tplease check your argument");
+			}
+		}
 	}
-
 }

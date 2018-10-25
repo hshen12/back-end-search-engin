@@ -1,8 +1,13 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Iterator;
+
+import opennlp.tools.stemmer.Stemmer;
+import opennlp.tools.stemmer.snowball.SnowballStemmer;
 
 /**
  * InvertedMapBuilder class
@@ -12,82 +17,54 @@ import java.util.Iterator;
  */
 public class InvertedMapBuilder {
 
-	private InvertedMap map;
-	private ArrayList<Path> fileList;
-
 	/**
-	 * Constructor
-	 * @param map
-	 */
-	public InvertedMapBuilder(InvertedMap map) {
-		this.map = map;
-		this.fileList = new ArrayList<Path>();
-	}
-
-	/**
-	 * loop through the given directory and find the file and put them into a arraylist
+	 * Read through the given directory, find the file in the given directory
 	 * @param file directory 
+	 * @param index data structure
 	 * @throws Exception
 	 * 
 	 * @see java.nio.DirectoryStream
+	 * @see Files#newDirectoryStream(Path)
 	 */
-	public void buildMap(Path file) throws Exception {
-
-		//if statement determine whether the given file is a directory or not
-		//if directory, send to getDirectory() method
+	public static void buildMap(Path file, InvertedIndex index) throws IOException {
 		if(Files.isDirectory(file)) {
-			//use DirectoryStream to loop through the given directory
-			DirectoryStream<Path> list = Files.newDirectoryStream(file);
-				Iterator<Path> iterator = list.iterator();
-				Path currentFile;
-				while(iterator.hasNext()) {
-					
-					currentFile = iterator.next();
-					buildMap(currentFile);
+			try(DirectoryStream<Path> list = Files.newDirectoryStream(file)) {
+				Iterator<Path> directoryStreamIt = list.iterator();
+				while(directoryStreamIt.hasNext()) {
+					buildMap(directoryStreamIt.next(), index);
 				}
-			
-		} else {
-			
+			}
+		} else { 
 			String fileName = file.toString().toLowerCase();
-			if(fileName.endsWith("txt") || fileName.endsWith("text")) {
-				fileList.add(file);
+			if(fileName.endsWith(".txt") || fileName.endsWith(".text")) {
+				stemFile(file, index);
 			}
 		}
-
-		addData();
-
 	}
 
 	/**
-	 * use TextFileStemmer to parse file content
-	 * @throws Exception
+	 * Reads a file and put each word into the data structure
 	 * 
-	 * {@link TextFileStemmer#stemFile(Path)}
+	 * @param inputFile the input file to parse
+	 * @param index data structure
+	 * @throws IOException if unable to read the file 
+	 * 
+	 * @see #stemLine(String, Stemmer)
+	 * @see InvertedMap#put(String, String, int)
+	 * @see Stemmer#stem(CharSequence)
 	 */
-	private void addData() throws Exception {
-		
-		for(Path file: fileList) {
-			ArrayList<String> cleanedText = TextFileStemmer.stemFile(file);
-			WordIndex oneFile = new WordIndex(file.toString());
-			oneFile.addAll(cleanedText);
-			
-			add(oneFile);
+	public static void stemFile(Path inputFile, InvertedIndex index) throws IOException{
+		var stemmer = new SnowballStemmer(SnowballStemmer.ALGORITHM.ENGLISH);
+		try(BufferedReader br = Files.newBufferedReader(inputFile, StandardCharsets.UTF_8)){
+			String line;
+			int start = 1;
+			while((line = br.readLine()) != null) {
+				String name = inputFile.toString();
+				for(String s: TextParser.parse(line)) {
+					index.putIndex(stemmer.stem(s).toString(), name, start++);
+				}
+			}
+			index.putLocations(inputFile.toString(), --start);
 		}
 	}
-
-	/**
-	 * add the WordIndex into InvertedMap
-	 * @param oneFile WordIndex data structure
-	 * 
-	 * @see {@link WordIndex}
-	 * @see {@link InvertedMap}
-	 */
-	private void add(WordIndex oneFile) {
-		
-		for(String word: oneFile.getKeySet()) {
-			
-			map.put(word, oneFile.getTxt(), oneFile.getSet(word));
-		}
-	}
-
 }
