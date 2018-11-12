@@ -64,7 +64,20 @@ public class InvertedMapBuilder {
 					index.putIndex(stemmer.stem(s).toString(), name, start++);
 				}
 			}
-			index.putLocations(inputFile.toString(), --start);
 		}
 	}
+	
+	/**
+	 * Take in a input file and return a inverted index
+	 * @param inputFile file
+	 * @return inverted index
+	 * @throws IOException
+	 */
+	public static InvertedIndex stemFile(Path inputFile) throws IOException {
+		InvertedIndex temp = new InvertedIndex();
+		stemFile(inputFile, temp);
+		return temp;
+	}
+	
+	
 }

@@ -1,5 +1,8 @@
 import java.util.LinkedList;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * A simple work queue implementation based on the IBM developerWorks article by
  * Brian Goetz. It is up to the user of this class to keep track of whether
@@ -25,7 +28,9 @@ public class WorkQueue {
 	/** The default number of threads to use when not specified. */
 	public static final int DEFAULT = 5;
 
-	public int pending;
+	private int pending;
+	
+	private static final Logger log = LogManager.getLogger();
 
 	/**
 	 * Starts a work queue with the default number of threads.
@@ -68,15 +73,17 @@ public class WorkQueue {
 		}
 	}
 
-	public synchronized void incrementPending() {
+	private synchronized void incrementPending() {
+		synchronized(queue) {
+			pending++;
+		}
 		
-		pending++;
 	}
-	
-	public void decrementPending() {
+
+	private void decrementPending() {
 		synchronized(queue) {
 			pending--;
-			if(pending <=0 && queue.isEmpty()) {
+			if(pending == 0) {
 				queue.notifyAll();
 			}
 		}
@@ -85,13 +92,12 @@ public class WorkQueue {
 	 * Waits for all pending work to be finished.
 	 */
 	public void finish() {
-		
+
 		synchronized(queue) {
 			try {
 				while(pending > 0) {
 					queue.wait();
 				} 
-				queue.notifyAll();
 			} catch(InterruptedException e) {
 				System.err.println("interrunpted exception catched!");
 			}
@@ -106,7 +112,7 @@ public class WorkQueue {
 		// safe to do unsynchronized due to volatile keyword
 		shutdown = true;
 
-		synchronized (this.queue) {
+		synchronized (queue) {
 			queue.notifyAll();
 		}
 	}
@@ -139,7 +145,7 @@ public class WorkQueue {
 							queue.wait();
 						}
 						catch (InterruptedException ex) {
-							System.err.println("Warning: Work queue interrupted.");
+							log.warn("Warning: Work queue interrupted.", ex);
 							Thread.currentThread().interrupt();
 						}
 					}
@@ -152,15 +158,15 @@ public class WorkQueue {
 					}
 					else {
 						r = queue.removeFirst();
+
 					}
 				}
-
 				try {
 					r.run();
 				}
 				catch (RuntimeException ex) {
 					// catch runtime exceptions to avoid leaking threads
-					System.err.println("Warning: Work queue encountered an exception while running.");
+					log.warn("Warning: Work queue encountered an exception while running.", ex);
 				}
 				decrementPending();
 			}

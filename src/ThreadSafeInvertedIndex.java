@@ -1,29 +1,33 @@
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Thread safe version of inverted index
  * @author Hao Shen
  *
  */
-public class ThreadSafeInvertedIndex extends InvertedIndex{
+public class ThreadSafeInvertedIndex extends InvertedIndex {
 
 	private final ReadWriteLock lock;
 	
+	/**
+	 * Invoke the parent constructor and initialize the read write lock
+	 */
 	public ThreadSafeInvertedIndex() {
 		super();
 		this.lock = new ReadWriteLock();
 	}
-	
-	@Override
-	public void putLocations(String path, int count) {
-		lock.lockReadWrite();
-		super.putLocations(path, count);
-		lock.unlockReadWrite();
-	}
 
+	/**
+	 * Return a set view of all word
+	 * invoke the parent method
+	 * 
+	 * @see InvertedIndex#getWordSet()
+	 */
 	@Override
 	public Set<String> getWordSet() {
 		lock.lockReadOnly();
@@ -34,6 +38,12 @@ public class ThreadSafeInvertedIndex extends InvertedIndex{
 		}
 	}
 	
+	/**
+	 * Return set view of all path key
+	 * invoke the parent method
+	 * 
+	 * @see InvertedIndex#getPathSet(String)
+	 */
 	@Override
 	public Set<String> getPathSet(String word) {
 		lock.lockReadOnly();
@@ -44,6 +54,12 @@ public class ThreadSafeInvertedIndex extends InvertedIndex{
 		}
 	}
 	
+	/**
+	 * Return the set of given key at given position
+	 * invoke the parent method
+	 * 
+	 * @see InvertedIndex#getPositionSet(String, String)
+	 */
 	@Override
 	public SortedSet<Integer> getPositionSet(String word, String path) {
 		lock.lockReadOnly();
@@ -54,6 +70,12 @@ public class ThreadSafeInvertedIndex extends InvertedIndex{
 		}
 	}
 	
+	/**
+	 * Return whether the map contains a word
+	 * invoke the parent method
+	 * 
+	 * @see InvertedIndex#containsWord(String)
+	 */
 	@Override
 	public boolean containsWord(String word) {
 		lock.lockReadOnly();
@@ -64,6 +86,12 @@ public class ThreadSafeInvertedIndex extends InvertedIndex{
 		}
 	}
 	
+	/**
+	 * Check in the given word, is there a given path exist
+	 * invoke the parent method
+	 * 
+	 * @see InvertedIndex#containsPath(String, String)
+	 */
 	@Override
 	public boolean containsPath(String word, String path) {
 		lock.lockReadOnly();
@@ -74,6 +102,7 @@ public class ThreadSafeInvertedIndex extends InvertedIndex{
 		}
 	}
 	
+	//end lab
 	@Override
 	public boolean containsPosition(String word, String path, int position) {
 		lock.lockReadOnly();
@@ -133,4 +162,36 @@ public class ThreadSafeInvertedIndex extends InvertedIndex{
 			lock.unlockReadOnly();
 		}
 	}
+	
+	@Override
+	public ArrayList<OneResult> partialSearch(TreeSet<String> oneLineQuery) {
+		lock.lockReadOnly();
+		try {
+			return super.partialSearch(oneLineQuery);
+		} finally {
+			lock.unlockReadOnly();
+		}
+	}
+	
+	@Override
+	public ArrayList<OneResult> exactSearch(TreeSet<String> oneLineQuery) {
+		lock.lockReadOnly();
+		try {
+			return super.exactSearch(oneLineQuery);
+		} finally {
+			lock.unlockReadOnly();
+		}
+	}
+	
+	@Override
+	public void addAll(InvertedIndex temp) {
+		lock.lockReadWrite();
+		try {
+			super.addAll(temp);
+		} finally {
+			lock.unlockReadWrite();
+		}
+	}
+	
+	
 }

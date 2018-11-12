@@ -6,32 +6,33 @@
  */
 public class OneResult implements Comparable<OneResult>{
 	
-	private String path;
-	private Integer total_words;
-	private Integer count;
-	private Double score;
+	private final String path;
+	private final int totalWords;
+	private int count;
+	private double score;
 	
 	/**
 	 * Constructor
 	 * 	initialize one search result
 	 * @param path the path of the file which found the query word
-	 * @param total_words how many word in that file
+	 * @param totalWord how many word in that file
 	 * @param count how many times the query word being found in the file
 	 */
-	public OneResult(String path, int total_words, int count) {
+	public OneResult(String path, int totalWord, int count) {
 		this.path = path;
-		this.total_words = Integer.valueOf(total_words);
-		this.count = Integer.valueOf(count);
-		this.score = Double.valueOf((double) count/total_words);
+		this.totalWords = totalWord;
+		this.count = count;
+		this.score = (double) count/totalWord;
 	}
 	
 	/**
 	 * Update the count and recalculate the score for the search result
-	 * @param other_count the number need to be increase
+	 * @param otherCount the number need to be increase
 	 */
-	public void updateCount(int other_count) {
-		this.count += other_count;
-		this.score = Double.valueOf((double) count/total_words);
+	public void updateCount(int otherCount) {
+		this.count += otherCount;
+		this.score = (double) count/totalWords;
+
 	}
 	
 	/**
@@ -73,7 +74,7 @@ public class OneResult implements Comparable<OneResult>{
 	 */
 	@Override
 	public String toString() {
-		return this.getPath() + " " + this.getCount() + " " + this.getScore();
+		return this.getPath() + " " + this.getCount() + " " + this.totalWords;
 	}
 	
 	/**
@@ -90,7 +91,6 @@ public class OneResult implements Comparable<OneResult>{
 			return Integer.compare(other.getCount(), this.getCount());
 		}
 		return Double.compare(other.getScore(), this.getScore());
-		
 	}
 
 }

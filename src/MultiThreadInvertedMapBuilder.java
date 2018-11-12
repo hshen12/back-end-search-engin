@@ -12,8 +12,6 @@ import java.util.Iterator;
  */
 public class MultiThreadInvertedMapBuilder {
 	
-	private static WorkQueue wq;
-	
 	/**
 	 * Initialize the work queue and wait all work to be finish
 	 * @param file the file we want to store in the data structure
@@ -22,10 +20,9 @@ public class MultiThreadInvertedMapBuilder {
 	 * @throws IOException when buffered reader cannot read the file
 	 * @throws InterruptedException when encountered interrupted exception
 	 */
-	public static void buildMap(Path file, InvertedIndex index, WorkQueue paraWq) throws IOException, InterruptedException{
-		wq = paraWq;
-		buildMapHelper(file, index);
-		wq.finish();
+	public static void buildMap(Path file, InvertedIndex index, WorkQueue worker) throws IOException {
+		buildMapHelper(file, index, worker);
+		worker.finish();
 	}
 	
 	/**
@@ -36,21 +33,49 @@ public class MultiThreadInvertedMapBuilder {
 	 * 
 	 * @see {@link InvertedMapBuilder#buildMap(Path, InvertedIndex)}
 	 */
-	private static void buildMapHelper(Path file, InvertedIndex index) throws IOException {
+	private static void buildMapHelper(Path file, InvertedIndex index, WorkQueue worker) throws IOException {
 		
 		if(Files.isDirectory(file)) {
 			try(DirectoryStream<Path> list = Files.newDirectoryStream(file)) {
 				Iterator<Path> directoryStreamIt = list.iterator();
 				while(directoryStreamIt.hasNext()) {
-					buildMapHelper(directoryStreamIt.next(), index);
+					buildMapHelper(directoryStreamIt.next(), index, worker);
 				}
 			}
 		} else {
 			String fileName = file.toString().toLowerCase();
 			if(fileName.endsWith(".text") || fileName.endsWith(".txt")) {
-				wq.execute(new StemFileTask(file, index));
+				worker.execute(new StemFileTask(file, index));
 			}
 		}
+	}
+	
+	/**
+	 * StemFile class
+	 * 	stem the given file and add in the inverted index data structure
+	 * @author Hao Shen
+	 *
+	 */
+	private static class StemFileTask implements Runnable {
+
+		private final Path file;
+		private final InvertedIndex index;
+		
+		public StemFileTask(Path file, InvertedIndex index) {
+			this.file = file;
+			this.index = index;
+		}
+
+		@Override
+		public void run() {
+			try {
+				InvertedIndex temp = InvertedMapBuilder.stemFile(file);
+				index.addAll(temp);
+			} catch (IOException e1) {
+				System.err.println("Unable to stem file: " + file.toString());
+			}
+		}
+		
 	}
 
 }

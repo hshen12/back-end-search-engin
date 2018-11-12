@@ -376,13 +376,13 @@ public class TreeJSONWriter {
 	 * Writes the search result of elements formatted as a nested pretty JSON object
 	 * to the specified file.
 	 *
-	 * @param elements the inverted index to convert to JSON
-	 * @param path     the path to the file write to output
+	 * @param searchResult the search result to convert to JSON
+	 * @param path the path to the file write to output
 	 * @throws IOException if the writer encounters any issues
 	 *
 	 * @see #asSearchResult(TreeMap, Writer, int)
 	 */
-	public static void asSearchResult(TreeMap<TreeSet<String>, ArrayList<OneResult>> searchResult, 
+	public static void asSearchResult(TreeMap<String, ArrayList<OneResult>> searchResult, 
 			Path resultPath) throws IOException {
 		try (BufferedWriter writer = Files.newBufferedWriter(resultPath,
 				StandardCharsets.UTF_8)) {
@@ -393,12 +393,12 @@ public class TreeJSONWriter {
 	/**
 	 * Returns the search result of elements formatted as a nested pretty JSON object.
 	 *
-	 * @param elements the inverted index to convert to JSON
+	 * @param searchResult the search result to convert to JSON
 	 * @return {@link String} containing the elements in pretty JSON format
 	 *
 	 * @see #asSearchResult(TreeMap, Writer, int)
 	 */
-	public static String asSearchResult(TreeMap<TreeSet<String>, ArrayList<OneResult>> searchResult) {
+	public static String asSearchResult(TreeMap<String, ArrayList<OneResult>> searchResult) {
 		try {
 			StringWriter writer = new StringWriter();
 			asSearchResult(searchResult, writer, 0);
@@ -411,7 +411,7 @@ public class TreeJSONWriter {
 	
 	/**
 	 * Write the query word and the corresponding search result out using JSON format
-	 * @param elements data structure 
+	 * @param searchResult search result data structure
 	 * @param writer bufferedWriter to write to the file
 	 * @param level indentation level, start from 0
 	 * @throws IOException
@@ -420,14 +420,14 @@ public class TreeJSONWriter {
 	 * @see #indent(int, Writer)
 	 * @see #quote(String, Writer)
 	 */
-	public static void asSearchResult(TreeMap<TreeSet<String>, ArrayList<OneResult>> searchResult, Writer writer,
+	public static void asSearchResult(TreeMap<String, ArrayList<OneResult>> searchResult, Writer writer,
 			int level) throws IOException {
 		indent(level, writer);
 		writer.write("[");
 		writer.write(System.lineSeparator());
 		if(!searchResult.isEmpty()) {
-			Iterator<TreeSet<String>> iterator = searchResult.keySet().iterator();
-			TreeSet<String> current = iterator.next();
+			Iterator<String> iterator = searchResult.keySet().iterator();
+			String current = iterator.next();
 			asQuery(current, searchResult.get(current), writer, level+1);
 			while(iterator.hasNext()) {
 				current = iterator.next();
@@ -444,7 +444,7 @@ public class TreeJSONWriter {
 
 	/**
 	 * Write the query word and the corresponding search result out using JSON format
-	 * @param elements data structure 
+	 * @param query query word
 	 * @param writer bufferedWriter to write to the file
 	 * @param level indentation level, start from 0
 	 * @throws IOException
@@ -453,7 +453,7 @@ public class TreeJSONWriter {
 	 * @see #indent(int, Writer)
 	 * @see #quote(String, Writer)
 	 */
-	private static void asQuery(TreeSet<String> query, ArrayList<OneResult> list, Writer writer, 
+	private static void asQuery(String query, ArrayList<OneResult> list, Writer writer, 
 			int level) throws IOException {
 		indent(level, writer);
 		writer.write("{");
@@ -461,7 +461,7 @@ public class TreeJSONWriter {
 		indent(level+1, writer);
 		quote("queries", writer);
 		writer.write(": ");
-		quote(String.join(" ", query), writer);
+		quote(query, writer);
 		writer.write(",");
 		writer.write(System.lineSeparator());
 		indent(level+1, writer);

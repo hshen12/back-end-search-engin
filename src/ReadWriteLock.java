@@ -1,3 +1,5 @@
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A simple custom lock that allows simultaneously read operations, but
@@ -10,7 +12,8 @@
 public class ReadWriteLock {
 	private int readers;
 	private int writers;
-
+	private static final Logger log = LogManager.getLogger();
+	
 	/**
 	 * Initializes a multi-reader single-writer lock.
 	 */
@@ -24,12 +27,11 @@ public class ReadWriteLock {
 	 * increase the number of active readers.
 	 */
 	public synchronized void lockReadOnly() {
-		//start lab
 		while(writers > 0) {
 			try {
 				wait();
 			} catch(InterruptedException e) {
-				System.err.printf("read only exception %s\n", e.getCause());
+				log.error("lock read only exception", e);
 			}
 		}
 		readers++;
@@ -41,7 +43,10 @@ public class ReadWriteLock {
 	 */
 	public synchronized void unlockReadOnly() {
 		readers--;
-		notifyAll();
+		if(readers == 0) {
+			notifyAll();
+		}
+		
 	}
 
 	/**
@@ -53,7 +58,7 @@ public class ReadWriteLock {
 			try {
 				wait();
 			} catch(InterruptedException e) {
-				System.err.printf("read writer exception %s\n", e.getCause());
+				log.warn("read write exception", e);
 			}
 		}
 		writers++;
