@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,23 +22,54 @@ public class Driver {
 		ArgumentMap map = new ArgumentMap(args);
 		int threads = 1;
 		boolean threadFlag = map.hasFlag("-threads");
-
-		WorkQueue wq = null;
+		boolean urlFlag = map.hasFlag("-url");
+		
+		WorkQueue worker = null;
 		InvertedIndex index = null;
+		ThreadSafeInvertedIndex threadSafe = null;
 		QueryParserInterface queryParser;
+		WebCrawler crawler = null;
+		
+		if(urlFlag) {
+			threadFlag = true;
+		}
 
 		if (!threadFlag) {
 			index = new InvertedIndex();
 			queryParser = new QueryParser(index);
 		} else {
 			threads = Integer.parseInt(map.getString("-threads", "5"));
-			wq = new WorkQueue(threads);
-			index = new ThreadSafeInvertedIndex();
-			queryParser = new MultiThreadQueryParser(wq, index);
+			worker = new WorkQueue(threads);
+			threadSafe = new ThreadSafeInvertedIndex();
+			index = threadSafe;
+			queryParser = new MultiThreadQueryParser(worker, threadSafe);
+			crawler = new WebCrawler(worker, threadSafe);
 		}
 
-		//-path
-		if(map.hasFlag("-path")) {
+		//-url
+		if(urlFlag) {
+			String seedStr = map.getString("-url");
+			URL seed;
+			int limit;
+			try {
+				seed = new URL(map.getString("-url"));
+				limit = Integer.parseInt(map.getString("-limit", "50"));
+			} catch (MalformedURLException e) {
+				System.err.println("Illegal url: " + seedStr + " please check your argument");
+				return;
+			} catch (NumberFormatException numEx) {
+				System.err.println("Illegal limit number: " + map.getString("-limit", "50"));
+				return;
+			}
+				
+			try {
+				crawler.craw(seed, limit);
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
+			
+		} else if(map.hasFlag("-path")) {
+			//-path
 			Path file = map.getPath("-path");
 
 			if(file != null && Files.exists(file)) {
@@ -45,7 +78,7 @@ public class Driver {
 					if(!threadFlag) {
 						InvertedMapBuilder.buildMap(file, index);
 					} else {
-						MultiThreadInvertedMapBuilder.buildMap(file, index, wq);
+						MultiThreadInvertedMapBuilder.buildMap(file, threadSafe, worker);
 					}
 				} catch (IOException e) {
 					System.err.println("Unbale to read the path or stem the file: " + file.toString() + "\n\tplease check your argument");
@@ -53,10 +86,8 @@ public class Driver {
 			} else {
 				if(file == null) {
 					System.err.println("Missing argument for -path");
-					return;
 				} else {
 					System.err.println("Invalid value for path flag: " + file.toString() + "\n\tplease check your argument");
-					return;
 				}
 			}
 		} else {
@@ -65,7 +96,7 @@ public class Driver {
 
 		//-index
 		if(map.hasFlag("-index")) {
-			Path indexPath = map.getPath("-i" + "ndex", Paths.get("index.json"));
+			Path indexPath = map.getPath("-index", Paths.get("index.json"));
 			try {
 				index.toIndexJSON(indexPath);
 			} catch (IOException e) {
@@ -90,15 +121,10 @@ public class Driver {
 
 			if(Files.exists(queryFile)) {
 				try {
-					if(!threadFlag) {
-						queryParser.stemQuery(queryFile, exact);
-					} else {
-						queryParser.stemQuery(queryFile, exact);
-					}
+					queryParser.stemQuery(queryFile, exact);
 				} catch(IOException e) {
 					System.err.println("Unable to search on: " + queryFile.toString() + "\n\tplease check your argument");
 				}
-
 			} else {
 				System.err.println("Invalid value for search flag: " + queryFile.toString() + "\n\tplease check your argument");
 			}
@@ -112,6 +138,9 @@ public class Driver {
 			} catch(IOException e) {
 				System.err.println("Unable to generate the search result file: " + resultPath.toString() + "\n\tplease check your argument");
 			}
+		}
+		if(worker != null) {
+			worker.shutdown();
 		}
 	}
 }

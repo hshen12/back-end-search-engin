@@ -29,7 +29,7 @@ public class ReadWriteLock {
 	public synchronized void lockReadOnly() {
 		while(writers > 0) {
 			try {
-				wait();
+				this.wait();
 			} catch(InterruptedException e) {
 				log.error("lock read only exception", e);
 			}
@@ -56,7 +56,7 @@ public class ReadWriteLock {
 	public synchronized void lockReadWrite() {
 		while(readers > 0 || writers > 0) {
 			try {
-				wait();
+				this.wait();
 			} catch(InterruptedException e) {
 				log.warn("read write exception", e);
 			}

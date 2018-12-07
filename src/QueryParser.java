@@ -34,17 +34,9 @@ public class QueryParser implements QueryParserInterface {
 	}
 
 	/**
-	 * Read the query file and perform a partial or exact search to the index, store the search result to the
-	 * data structure
-	 * @param index data structure
-	 * @param queryFile query file
-	 * @param exact boolean indicate exact or partial search
-	 * @param searchResult data structure to store the search result
-	 * @throws IOException when encounter problem when reading the query file
-	 * 
-	 * @see #doPartialSearch(TreeSet, InvertedIndex)
-	 * @see #doExactSearch(TreeSet, InvertedIndex)
+	 * {@inheritDoc}
 	 */
+	@Override
 	public void stemQuery(Path queryFile, boolean exact) throws IOException {
 		SnowballStemmer stemmer = new SnowballStemmer(SnowballStemmer.ALGORITHM.ENGLISH);
 		try(BufferedReader br = Files.newBufferedReader(queryFile, StandardCharsets.UTF_8)) {
@@ -73,12 +65,9 @@ public class QueryParser implements QueryParserInterface {
 	}
 
 	/**
-	 * Output the search result
-	 * @param resultPath the output file path
-	 * @throws IOException if unable to output search result
-	 * 
-	 * @see TreeJSONWriter#asSearchResult(TreeMap, Path)
+	 * {@inheritDoc}
 	 */
+	@Override
 	public void toSearchResult(Path resultPath) throws IOException{
 		TreeJSONWriter.asSearchResult(searchResult, resultPath);
 	}

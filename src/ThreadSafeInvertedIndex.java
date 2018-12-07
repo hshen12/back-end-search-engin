@@ -134,6 +134,16 @@ public class ThreadSafeInvertedIndex extends InvertedIndex {
 	}
 	
 	@Override
+	public int getTotalWords(String path) {
+		lock.lockReadOnly();
+		try {
+			return super.getTotalWords(path);
+		} finally {
+			lock.unlockReadOnly();
+		}
+	}
+	
+	@Override
 	public void toIndexJSON(Path path) throws IOException{
 		lock.lockReadOnly();
 		try {

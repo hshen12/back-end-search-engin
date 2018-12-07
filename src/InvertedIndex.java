@@ -229,9 +229,9 @@ public class InvertedIndex {
 		if(pathTreeMap != null) {
 			for(String path: pathTreeMap.keySet()) {
 				if(result.containsKey(path)) {
-					result.get(path).updateCount(getPositionSet(indexKey, path).size());
+					result.get(path).updateCount(this.index.get(indexKey).get(path).size());
 				} else {
-					OneResult oneResult = new OneResult(path, getTotalWords(path), getPositionSet(indexKey, path).size());
+					OneResult oneResult = new OneResult(path, this.locations.get(path), this.index.get(indexKey).get(path).size());
 					result.put(path, oneResult);
 					list.add(oneResult);
 				}
@@ -248,11 +248,7 @@ public class InvertedIndex {
 			if (this.index.containsKey(word)) {
 				for(String path: temp.index.get(word).keySet()) {
 					if(this.index.get(word).containsKey(path)) {
-						for(int position: temp.index.get(word).get(path)) {
-							if(!this.index.get(word).get(path).contains(position)) {
-								this.index.get(word).get(path).add(position);
-							}
-						}
+						this.index.get(word).get(path).addAll(temp.index.get(word).get(path));
 					} else {
 						this.index.get(word).put(path, temp.index.get(word).get(path));
 					}
@@ -261,6 +257,7 @@ public class InvertedIndex {
 				this.index.put(word, temp.index.get(word));
 			}
 		}
+		
 		this.locations.putAll(temp.locations);
 	}
 

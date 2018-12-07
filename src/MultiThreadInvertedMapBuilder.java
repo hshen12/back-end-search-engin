@@ -11,7 +11,7 @@ import java.util.Iterator;
  *
  */
 public class MultiThreadInvertedMapBuilder {
-	
+
 	/**
 	 * Initialize the work queue and wait all work to be finish
 	 * @param file the file we want to store in the data structure
@@ -20,7 +20,7 @@ public class MultiThreadInvertedMapBuilder {
 	 * @throws IOException when buffered reader cannot read the file
 	 * @throws InterruptedException when encountered interrupted exception
 	 */
-	public static void buildMap(Path file, InvertedIndex index, WorkQueue worker) throws IOException {
+	public static void buildMap(Path file, ThreadSafeInvertedIndex index, WorkQueue worker) throws IOException {
 		buildMapHelper(file, index, worker);
 		worker.finish();
 	}
@@ -31,9 +31,9 @@ public class MultiThreadInvertedMapBuilder {
 	 * @param index inverted index data structure
 	 * @throws IOException 
 	 * 
-	 * @see {@link InvertedMapBuilder#buildMap(Path, InvertedIndex)}
+	 * @see {@link InvertedMapBuilder#buildMap(Path, ThreadSafeInvertedIndex)}
 	 */
-	private static void buildMapHelper(Path file, InvertedIndex index, WorkQueue worker) throws IOException {
+	private static void buildMapHelper(Path file, ThreadSafeInvertedIndex index, WorkQueue worker) throws IOException {
 		
 		if(Files.isDirectory(file)) {
 			try(DirectoryStream<Path> list = Files.newDirectoryStream(file)) {
@@ -59,9 +59,9 @@ public class MultiThreadInvertedMapBuilder {
 	private static class StemFileTask implements Runnable {
 
 		private final Path file;
-		private final InvertedIndex index;
+		private final ThreadSafeInvertedIndex index;
 		
-		public StemFileTask(Path file, InvertedIndex index) {
+		public StemFileTask(Path file, ThreadSafeInvertedIndex index) {
 			this.file = file;
 			this.index = index;
 		}

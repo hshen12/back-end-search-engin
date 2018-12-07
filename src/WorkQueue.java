@@ -67,19 +67,15 @@ public class WorkQueue {
 	 */
 	public void execute(Runnable r) {
 		synchronized (queue) {
-			incrementPending();
+			pending++;
 			queue.addLast(r);
 			queue.notifyAll();
 		}
 	}
-
-	private synchronized void incrementPending() {
-		synchronized(queue) {
-			pending++;
-		}
-		
-	}
-
+	
+	/**
+	 * Decrement pending variable
+	 */
 	private void decrementPending() {
 		synchronized(queue) {
 			pending--;
@@ -88,6 +84,7 @@ public class WorkQueue {
 			}
 		}
 	}
+	
 	/**
 	 * Waits for all pending work to be finished.
 	 */
