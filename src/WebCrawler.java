@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,11 +24,10 @@ public class WebCrawler {
 
 	/**
 	 * Craw the given seed
-	 * @param seed
-	 * @param limit
-	 * @throws MalformedURLException
+	 * @param seed url seed
+	 * @param limit the maximum number of url to craw
 	 */
-	public void craw(URL seed, int limit) throws MalformedURLException {
+	public void craw(URL seed, int limit) {
 		allLink.add(seed);
 		worker.execute(new WebCrawlerTask(seed, limit));
 		worker.finish();
@@ -84,7 +82,7 @@ public class WebCrawler {
 					}
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.err.println("Unable to read the page: " + eachURL.toString());
 			}
 		}
 	}

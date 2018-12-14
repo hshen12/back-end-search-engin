@@ -257,7 +257,7 @@ public class InvertedIndex {
 				this.index.put(word, temp.index.get(word));
 			}
 		}
-		
+
 		this.locations.putAll(temp.locations);
 	}
 
@@ -274,5 +274,38 @@ public class InvertedIndex {
 		index.get(word).putIfAbsent(location, new TreeSet<>());
 		incrementLocation(location);
 		return index.get(word).get(location).add(position);
+	}
+
+	public ArrayList<OneResult> exactSearch(String word) {
+		ArrayList<OneResult> list = new ArrayList<>();
+		searchHelper(word, list);
+
+
+		Collections.sort(list);
+		return list;
+	}
+
+	public ArrayList<OneResult> partialSearch(String word) {
+		ArrayList<OneResult> list = new ArrayList<>();
+		for(String indexKey: index.tailMap(word).keySet()) {
+			if(indexKey.startsWith(word)) {
+				searchHelper(indexKey, list);
+			} else {
+				break;
+			}
+		}
+
+		Collections.sort(list);
+		return list;
+	}
+
+	private void searchHelper(String indexKey, ArrayList<OneResult> list) {
+		var pathTreeMap = index.get(indexKey);
+		if(pathTreeMap != null) {
+			for(String path: pathTreeMap.keySet()) {
+				OneResult oneResult = new OneResult(path, this.locations.get(path), this.index.get(indexKey).get(path).size());
+				list.add(oneResult);
+			}
+		}
 	}
 }

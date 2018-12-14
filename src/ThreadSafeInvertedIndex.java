@@ -202,6 +202,24 @@ public class ThreadSafeInvertedIndex extends InvertedIndex {
 			lock.unlockReadWrite();
 		}
 	}
+
+	public ArrayList<OneResult> exactSearch(String word) {
+		lock.lockReadOnly();
+		try {
+			return super.exactSearch(word);
+		} finally {
+			lock.unlockReadOnly();
+		}
+	}
+
+	public ArrayList<OneResult> partialSearch(String word) {
+		lock.lockReadOnly();
+		try {
+			return super.partialSearch(word);
+		} finally {
+			lock.unlockReadOnly();
+		}
+	}
 	
 	
 }

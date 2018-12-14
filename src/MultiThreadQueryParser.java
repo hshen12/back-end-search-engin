@@ -84,12 +84,6 @@ public class MultiThreadQueryParser implements QueryParserInterface {
 			}
 
 			String queryLine = String.join(" ", oneLineQuery);
-		
-			synchronized(searchResult) {
-				if(searchResult.containsKey(queryLine)) {
-					return;
-				}
-			}
 
 			if(!oneLineQuery.isEmpty()) {
 				synchronized(searchResult) {

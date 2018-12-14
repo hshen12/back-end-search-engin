@@ -23,14 +23,16 @@ public class Driver {
 		int threads = 1;
 		boolean threadFlag = map.hasFlag("-threads");
 		boolean urlFlag = map.hasFlag("-url");
-		
+		boolean portFlag = map.hasFlag("-port");
+
 		WorkQueue worker = null;
 		InvertedIndex index = null;
 		ThreadSafeInvertedIndex threadSafe = null;
 		QueryParserInterface queryParser;
 		WebCrawler crawler = null;
-		
-		if(urlFlag) {
+		SearchEngin engin = null;
+
+		if(urlFlag || portFlag) {
 			threadFlag = true;
 		}
 
@@ -43,11 +45,11 @@ public class Driver {
 			threadSafe = new ThreadSafeInvertedIndex();
 			index = threadSafe;
 			queryParser = new MultiThreadQueryParser(worker, threadSafe);
-			crawler = new WebCrawler(worker, threadSafe);
 		}
 
 		//-url
 		if(urlFlag) {
+			crawler = new WebCrawler(worker, threadSafe);
 			String seedStr = map.getString("-url");
 			URL seed;
 			int limit;
@@ -58,18 +60,13 @@ public class Driver {
 				System.err.println("Illegal url: " + seedStr + " please check your argument");
 				return;
 			} catch (NumberFormatException numEx) {
-				System.err.println("Illegal limit number: " + map.getString("-limit", "50"));
+				System.err.println("Illegal limit number: " + map.getString("-limit"));
 				return;
 			}
-				
-			try {
-				crawler.craw(seed, limit);
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			}
-			
+
+			crawler.craw(seed, limit);
+
 		} else if(map.hasFlag("-path")) {
-			//-path
 			Path file = map.getPath("-path");
 
 			if(file != null && Files.exists(file)) {
@@ -114,8 +111,24 @@ public class Driver {
 			}
 		}
 
-		//-search
-		if(map.hasFlag("-search")) {
+		//-port
+		if(portFlag) {
+			int port;
+			try {
+				port = Integer.parseInt(map.getString("-port", "8080"));
+			} catch (NumberFormatException numEx) {
+				System.err.println("Illegal port number: " + map.getString("-port"));
+				return;
+			}
+			engin = new SearchEngin(threadSafe, port, worker);
+			try {
+				engin.startServlet();
+			} catch (Exception e) {
+				System.err.println("Exception happened while search!!!");
+			}
+
+		} else if(map.hasFlag("-search")) {
+			//-search
 			Path queryFile = map.getPath("-search");
 			boolean exact = map.hasFlag("-exact");
 
@@ -139,6 +152,7 @@ public class Driver {
 				System.err.println("Unable to generate the search result file: " + resultPath.toString() + "\n\tplease check your argument");
 			}
 		}
+
 		if(worker != null) {
 			worker.shutdown();
 		}
