@@ -7,11 +7,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 @SuppressWarnings("serial")
 public class Shistory extends HttpServlet {
 
-	public static ArrayList<LinkedHashMap<String, ArrayList<OneResult>>> history = new ArrayList<LinkedHashMap<String, ArrayList<OneResult>>>();
+//	public static ArrayList<LinkedHashMap<String, ArrayList<OneResult>>> history = new ArrayList<LinkedHashMap<String, ArrayList<OneResult>>>();
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException {
 
@@ -22,7 +23,10 @@ public class Shistory extends HttpServlet {
 		out.println("  <HEAD><TITLE>Search engine</TITLE></HEAD>");
 		out.println("  <BODY>");
 		out.print(" <p> Search History </p>");
-		out.print(" <p>");
+		out.print(" <p>"); 
+		HttpSession session = request.getSession();
+		@SuppressWarnings("unchecked")
+		ArrayList<LinkedHashMap<String, ArrayList<OneResult>>> history = (ArrayList<LinkedHashMap<String, ArrayList<OneResult>>>) session.getAttribute("history");
 		if(!history.isEmpty()) {
 			int i = 1;
 			for(LinkedHashMap<String, ArrayList<OneResult>> o: history) {
@@ -57,7 +61,10 @@ public class Shistory extends HttpServlet {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException {
-		Shistory.history.clear();
+		HttpSession session = request.getSession();
+		@SuppressWarnings("unchecked")
+		ArrayList<LinkedHashMap<String, ArrayList<OneResult>>> history = (ArrayList<LinkedHashMap<String, ArrayList<OneResult>>>) session.getAttribute("history");
+		history.clear();
 		doGet(request,response);
 	}
 

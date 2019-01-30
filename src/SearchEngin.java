@@ -1,4 +1,5 @@
 import org.eclipse.jetty.server.Server;
+
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -27,12 +28,12 @@ public class SearchEngin {
 	 */
 	public void startServlet() throws Exception {
 		Server server = new Server(port);
-		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+		ServletContextHandler context = new ServletContextHandler();
 		
 		context.setContextPath("/");
 		context.addServlet(new ServletHolder(new index(threadSafe, worker)), "/");
 		
-		ServletContextHandler historyContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+		ServletContextHandler historyContext = new ServletContextHandler();
 		
 		historyContext.setContextPath("/history");
 		historyContext.addServlet(new ServletHolder(new Shistory()), "/");

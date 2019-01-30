@@ -7,7 +7,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-//import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpSession;
 
 import opennlp.tools.stemmer.snowball.SnowballStemmer;
 
@@ -99,11 +99,10 @@ public class index extends HttpServlet {
 		boolean exact = request.getParameter("searchMode") == "partial" ? false : true;
 		String[] queries = query.split(" ");
 		search(queries, exact);
-		//      HttpSession session = request.getSession(true);
-		//      @SuppressWarnings("unchecked")
-		//		ArrayList<LinkedHashMap<String, ArrayList<OneResult>>> result = (ArrayList<LinkedHashMap<String, ArrayList<OneResult>>>) session.getAttribute("result");
-		//      result.add(searchResult);
-		Shistory.history.add(searchResult);
+		HttpSession session = request.getSession();
+		@SuppressWarnings("unchecked")
+		ArrayList<LinkedHashMap<String, ArrayList<OneResult>>> result = (ArrayList<LinkedHashMap<String, ArrayList<OneResult>>>) session.getAttribute("result");
+		session.setAttribute("history", result);
 		for(String s: queries) {
 			if(searchResult.get(s).size() != 0) {
 				out.printf("<p>Term: %s",s);
