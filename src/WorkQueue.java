@@ -77,7 +77,7 @@ public class WorkQueue {
 	 * Decrement pending variable
 	 */
 	private void decrementPending() {
-		synchronized(queue) {
+		synchronized(this) {
 			pending--;
 			if(pending == 0) {
 				queue.notifyAll();
@@ -90,7 +90,7 @@ public class WorkQueue {
 	 */
 	public void finish() {
 
-		synchronized(queue) {
+		synchronized(this) {
 			try {
 				while(pending > 0) {
 					queue.wait();
