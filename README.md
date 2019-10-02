@@ -7,3 +7,6 @@ The project will first grab the provided web page and clean simple, validating h
 It will output the data structure with in JSON format and perform a partial or exact search based on the query word provided.
 
 After search, it will output the search result also in JSON format.
+
+## test cases
+https://github.com/usf-cs212-fall2018/project-tests
